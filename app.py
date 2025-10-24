@@ -44,7 +44,7 @@ def connect_db():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
-@app.route("/", methods= ["GET", "POST"])
+@app.route("/"), methods= (["GET", "POST"])
 def index():
    conn = connect_db()
    cur = conn.cursor()
