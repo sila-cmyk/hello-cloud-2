@@ -2,12 +2,13 @@ from flask import Flask, render_template_string, request
 import os
 import psycopg2
 
-app = Flask(__name__)
+app = Flask (__name__)
 
 #Render'ın otomatik tanımladığı veritabanı bağlantı bilgisi (DATABASE_URL ortam değişkeni)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://hello_cloud2_db_zfvo_user:qSEyyY97p1Iub4UKRvYeH2QxhtNohmb0@dpg-d3tjhbvdiees73dk0ghg-a.oregon-postgres.render.com/hello_cloud2_db_zfvo")
+    "postgresql://hello_cloud2_db_zfvo_user:qSEyyY97p1Iub4UKRvYeH2QxhtNohmb0@dpg-d3tjhbvdiees73dk0ghg-a.oregon-postgres.render.com/hello_cloud2_db_zfvo"
+)
 
 #HTML ŞABLONU (tek sayfada form + liste)
 HTML = """
@@ -16,7 +17,7 @@ HTML = """
 <head>
     <title>Buluttan Selam!</title>
     <style>
-        body { font-family: Arial: text-alien: center: nadding: 50px: background: #eef2f3: }
+        body { font-family: Arial; text-alien: center; padding: 50px; background: #eef2f3: }
         h1 { color:#333 }
         form {margin: 20px auto; }
         input { padding: 10px; font-size: 16px; }
