@@ -17,52 +17,59 @@ HTML = """
 <head>
     <title>Buluttan Selam!</title>
     <style>
-        body { font-family: Arial; text-alien: center; padding: 50px; background: #eef2f3: }
-        h1 { color:#333 }
+        body { font-family: Arial; text-align: center; padding: 50px; background: #eef2f3; }
+        h1 { color:#333; }
         form {margin: 20px auto; }
         input { padding: 10px; font-size: 16px; }
         button {padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; }
-        ul (list-style: none; padding: 0; )
+        ul { list-style: none; padding: 0; }
         li {background: white; margin: 5px auto; padding: 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <h1>☁️ Buluttan Selam!</h1>
-    <p> Adını Yaz, selamını bırak👇</p>
+    <h1>Buluttan Selam!</h1>
+    <p> Adını Yaz, selamını bırak:</p>
     <form method= "POST">
         <input type="text" name="isim" placeholder="Adını Yaz" required>
-        <button type="submit">Gönder</button<
+        <button type="submit">Gönder</button>
     </form>
     <h3>Ziyaretçiler:</h3>
     <ul>
         {% for ad in isimler%}
              <li>{{ ad }}</li>
-        {%enfor%}
+        {% enfor %}
     </ul>
 </body>    
 </html>
 """
 
 def connect_db():
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
+return psycopg2.connect(DATABASE_URL)
 
-@app.route("/"), methods= (["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def index():
    conn = connect_db()
    cur = conn.cursor()
-   cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAL PRIMARY KEY, isim TEXT)")
 
-   if request.method == "POST":
+    # Tablo yoksa oluştur 
+   cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAL PRIMARY KEY, isim TEXT)") 
+
+  #POST isteği geldiğinde formdan isim al ve kaydet  
+if request.method == "POST":
       isim = request.form.get("isim")
       if isim:
          cur.execute("INSERT INTO ziyaretciler (isim VALUES (%s)", (isim,))
          conn.commit()
+          
+#Ziyaretçileri sırala 
 cur.execute("SELECT isim FROM ziyaretciler ORDER BY id DESC LIMIT 10")
 isimler = [row[0] for row in cur.fetchall()]
 
+#Bağlantıyı kapat
 cur.close()
 conn.close()
+
+#sayfayı render et 
 return render_template_string(HTML, isimler=isimler)
 
 if __name__ == "__main__":
