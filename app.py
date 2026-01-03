@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string
+hello-cloud 2 app.py from flask import Flask, request, render_template_string
 import os
 import psycopg2
 
