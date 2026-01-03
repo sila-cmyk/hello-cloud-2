@@ -1,4 +1,4 @@
-Vfrom flask import Flask, request, render_template_string, redirect, url_for
+from flask import Flask, request, render_template_string, redirect, url_for
 import os
 import psycopg2
 
