@@ -1,48 +1,66 @@
+from flask import Flask, request, render_template_string
 import os
 import psycopg2
-from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# Render üzerindeki veritabanı bağlantı adresini alır
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
 def connect_db():
-    # 'sslmode=require' ekleyerek bağlantı hatasını çözüyoruz
+    DATABASE_URL = os.environ.get('DATABASE_URL')
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
-@app.route('/')
-def index():
-    try:
-        conn = connect_db()
-        cur = conn.cursor()
-        
-        # 1. Tabloyu oluşturma komutu
-        cur.execute('''
-            CREATE TABLE IF NOT EXISTS mesajlar (
-                id SERIAL PRIMARY KEY,
-                isim VARCHAR(100),
-                mesaj TEXT
-            );
-        ''')
-        
-        # 2. Örnek bir veri ekleyelim (Test için)
-        cur.execute("INSERT INTO mesajlar (isim, mesaj) VALUES (%s, %s)", ("Gemini", "Selam, veritabanı harika çalışıyor!"))
-        
-        # 3. Eklediğimiz veriyi geri çekelim
-        cur.execute("SELECT isim, mesaj FROM mesajlar;")
-        sonuc = cur.fetchall()
-        
-        conn.commit() # Değişiklikleri kaydetmek için şart!
-        cur.close()
-        conn.close()
-        
-        return f"Tablo oluşturuldu ve veri eklendi! Veritabanındaki mesajlar: {sonuc}"
-    
-    except Exception as e:
-        return f"Hata: {str(e)}"
+# HTML Tasarımı (Basit bir form ve liste)
+HTML_TEMPLATE = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ziyaretçi Defteri</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; line-height: 1.6; }
+        input, textarea { width: 100%; padding: 10px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; }
+        .mesaj-kutusu { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>Ziyaretçi Defteri</h2>
+    <form method="POST">
+        <input type="text" name="isim" placeholder="Adınız" required>
+        <textarea name="mesaj" placeholder="Mesajınız" required></textarea>
+        <button type="submit">Gönder</button>
+    </form>
+    <hr>
+    <h3>Gelen Mesajlar</h3>
+    {% for isim, mesaj in mesajlar %}
+        <div class="mesaj-kutusu">
+            <strong>{{ isim }}:</strong> {{ mesaj }}
+        </div>
+    {% endfor %}
+</body>
+</html>
+'''
 
-# Render için gerekli port ve host ayarları
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    conn = connect_db()
+    cur = conn.cursor()
+    
+    # Tabloyu her ihtimale karşı hazır tut
+    cur.execute("CREATE TABLE IF NOT EXISTS mesajlar (id SERIAL PRIMARY KEY, isim TEXT, mesaj TEXT);")
+    
+    if request.method == 'POST':
+        isim = request.form.get('isim')
+        mesaj = request.form.get('mesaj')
+        cur.execute("INSERT INTO mesajlar (isim, mesaj) VALUES (%s, %s)", (isim, mesaj))
+        conn.commit()
+
+    # Tüm mesajları çek
+    cur.execute("SELECT isim, mesaj FROM mesajlar ORDER BY id DESC;")
+    tum_mesajlar = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return render_template_string(HTML_TEMPLATE, mesajlar=tum_mesajlar)
+
+if __name__ == '__main__':
+    app.run(debug=True)
