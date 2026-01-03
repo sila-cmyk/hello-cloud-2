@@ -17,17 +17,30 @@ def index():
         conn = connect_db()
         cur = conn.cursor()
         
-        # Burası örnek bir sorgudur, kendi tablo ismine göre değiştirebilirsin
-        cur.execute('SELECT version();')
-        db_version = cur.fetchone()
+        # 1. Tabloyu oluşturma komutu
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS mesajlar (
+                id SERIAL PRIMARY KEY,
+                isim VARCHAR(100),
+                mesaj TEXT
+            );
+        ''')
         
+        # 2. Örnek bir veri ekleyelim (Test için)
+        cur.execute("INSERT INTO mesajlar (isim, mesaj) VALUES (%s, %s)", ("Gemini", "Selam, veritabanı harika çalışıyor!"))
+        
+        # 3. Eklediğimiz veriyi geri çekelim
+        cur.execute("SELECT isim, mesaj FROM mesajlar;")
+        sonuc = cur.fetchall()
+        
+        conn.commit() # Değişiklikleri kaydetmek için şart!
         cur.close()
         conn.close()
         
-        return f"Veritabanına başarıyla bağlandım! DB Versiyonu: {db_version}"
+        return f"Tablo oluşturuldu ve veri eklendi! Veritabanındaki mesajlar: {sonuc}"
     
     except Exception as e:
-        return f"Bağlantı hatası oluştu: {str(e)}"
+        return f"Hata: {str(e)}"
 
 # Render için gerekli port ve host ayarları
 if __name__ == "__main__":
